@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 
 public class StreamProxy implements Runnable {
-    private String TAG="Stream Proxy";
+
 
     private static final int SERVER_PORT=8888;
 
@@ -35,18 +35,17 @@ public class StreamProxy implements Runnable {
     private long size;
     private String mimeType;
     private static final Path homeDirectory = Paths.get("C:" + File.separator + "Uploads" + File.separator);
-    private int cbSkip=0;
+    private int cbSkip;
     
     
 
     public StreamProxy() {
-//        size = contenLength;
-//        mimeType = MimeType;
 
 
 
         // Create listening socket
         try {
+            System.out.println("Initializing Server");
             socket = new ServerSocket(SERVER_PORT);
             socket.setSoTimeout(5000);
             port = socket.getLocalPort();
@@ -58,12 +57,14 @@ public class StreamProxy implements Runnable {
     }
 
     public void start() {
+        System.out.println("Inside start()");
         thread = new Thread(this);
         thread.start();
-        System.out.println("Initializing");
+        
     }
 
     public void stop() {
+        System.out.println("Inside stop()");
         isRunning = false;
         thread.interrupt();
         try {
@@ -75,6 +76,7 @@ public class StreamProxy implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Inside run()");
         //Looper.prepare();
         isRunning = true;
         while (isRunning) {
@@ -109,10 +111,13 @@ public class StreamProxy implements Runnable {
         
 
         public StreamToMediaPlayerTask(Socket client) {
+            System.out.println("Inside StreamToMediaPlayerTask constructor");
             this.client = client;
+            cbSkip = 0;
         }
 
         public boolean processRequest() throws IOException {
+            System.out.println("Inside processRequest()");
             // Read HTTP headers
             ArrayList<String> headers ;
             try {
@@ -124,7 +129,7 @@ public class StreamProxy implements Runnable {
             }
 
             // Get the important bits from the headers
-           // String[] headerLines = headers.split("\n");
+
             String[] headerLines = new String[headers.size()];
             for(int i=0; i<headers.size(); i++){
                 headerLines[i] = headers.get(i);
@@ -166,7 +171,7 @@ public class StreamProxy implements Runnable {
 
         
         protected Integer doInBackground() {
-
+            System.out.println("Inside doInBackground()");
             long fileSize = size;
 
             // Create HTTP header
@@ -176,11 +181,12 @@ public class StreamProxy implements Runnable {
             headers += "Connection: close\r\n";
             headers += "\r\n";
 
-            System.out.println("HEADERS SIX: "+headers);
+            
 
             // Begin with HTTP header
             int fc = 0;
             long cbToSend = fileSize - cbSkip;
+            System.out.println("cbSkip = "+cbSkip);
             OutputStream output = null;
             byte[] buff = new byte[64 * 1024];
             try {
@@ -189,8 +195,12 @@ public class StreamProxy implements Runnable {
                 System.out.println("Headers sent...");
 
                 // Loop as long as there's stuff to send
+                 System.out.println("isRunning = " +isRunning);
+                    System.out.println("cbToSend = "+cbToSend);
+                    System.out.println("client = "+client);
                 while (isRunning && cbToSend>0 && !client.isClosed()) {
 
+                   
                     // See if there's more to send
                     File file = new File(homeDirectory+File.separator+fileName);
                     fc++;
@@ -234,20 +244,20 @@ public class StreamProxy implements Runnable {
             }
 
             // Cleanup
-//            try {
-//                if (output != null) {
-//                    System.out.println("closing output");
-//                    output.close();
-//                }
-//                
-//                client.close();
-//                System.out.println("closed connection");
-//            }
-//            catch (IOException e) {
-//                System.out.println( "IOException while cleaning up streaming task:");
-//                System.out.println( e.getClass().getName() + " : " + e.getLocalizedMessage());
-//                e.printStackTrace();
-//            }
+            try {
+                if (output != null) {
+                    System.out.println("closing output");
+                    //output.close();
+                }
+                
+                client.close();
+                System.out.println("closed connection");
+            }
+            catch (IOException e) {
+                System.out.println( "IOException while cleaning up streaming task:");
+                System.out.println( e.getClass().getName() + " : " + e.getLocalizedMessage());
+                e.printStackTrace();
+            }
 
             return 1;
         }
@@ -276,11 +286,13 @@ public class StreamProxy implements Runnable {
         }
         
         private String extractMIMEtype(String requestedFileName) throws IOException{
+            System.out.println("Inside extractMIMEtype()");
             String mimeType = Files.probeContentType(Paths.get(homeDirectory+File.separator+requestedFileName));
             return mimeType;
         }
         
         private long extractContentLength(String requestedFileName) throws IOException{
+            System.out.println("Inside extractContentLength()");
             long size = Files.size(Paths.get(homeDirectory+File.separator+requestedFileName));
             return size;
         }
