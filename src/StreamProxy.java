@@ -133,7 +133,7 @@ public class StreamProxy implements Runnable {
             String[] headerLines = new String[headers.size()];
             for(int i=0; i<headers.size(); i++){
                 headerLines[i] = headers.get(i);
-                //System.out.println("HEADERLINE "+headerLines[i]);
+                System.out.println("HEADERLINE "+headerLines[i]);
             }
             String urlLine = headerLines[0];
             if (!urlLine.startsWith("GET ")) {
@@ -142,9 +142,12 @@ public class StreamProxy implements Runnable {
             }
             //System.out.println("HEADER three: "+urlLine);
             urlLine = urlLine.substring(4);
-            int charPos = urlLine.indexOf(' ');
+            //int charPos = urlLine.indexOf(' ');
+            int charPos = urlLine.indexOf(".mp3")+4;
+            System.out.println("charPos:"+charPos);
             if (charPos != -1) {
                 urlLine = urlLine.substring(1, charPos);
+                //System.out.println("urlLine"+urlLine);
             }
             fileName = urlLine;
             size = extractContentLength(fileName);
@@ -247,7 +250,7 @@ public class StreamProxy implements Runnable {
             try {
                 if (output != null) {
                     System.out.println("closing output");
-                    //output.close();
+                    output.close();
                 }
                 
                 client.close();
@@ -275,6 +278,7 @@ public class StreamProxy implements Runnable {
                     break;
                 }else{
 
+                    readLine = readLine.replace("%20", " ");
                     request.add(readLine);
 
                 }
